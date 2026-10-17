@@ -1,0 +1,13 @@
+# Ansible artifacts
+*.retry
+*.log
+
+# Local inventories and secrets
+inventory/local/
+vault-password*
+*.vault
+.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]

@@ -1,0 +1,74 @@
+---
+- name: Prepare and apply a basic Linux workstation baseline
+  hosts: workstation
+  become: true
+  gather_facts: true
+
+  vars:
+    # Deliberately conservative: package upgrades and firewall policy are out
+    # of scope. Override these in inventory/group_vars or with --extra-vars.
+    workstation_base_packages:
+      - chrony
+      - curl
+      - ca-certificates
+    workstation_timezone: Etc/UTC
+    workstation_manage_timezone: true
+    workstation_manage_time_sync: true
+    workstation_configure_motd: true
+
+  tasks:
+    - name: Verify supported Linux families
+      ansible.builtin.assert:
+        that:
+          - ansible_system == "Linux"
+          - ansible_os_family in ["Debian", "RedHat"]
+        fail_msg: >-
+          This playbook supports Debian-family and RedHat-family Linux systems;
+          detected {{ ansible_system }} / {{ ansible_os_family }}.
+
+    - name: Install baseline packages on Debian-family systems
+      ansible.builtin.apt:
+        name: "{{ workstation_base_packages }}"
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install baseline packages on RedHat-family systems
+      ansible.builtin.package:
+        name: "{{ workstation_base_packages }}"
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Configure system timezone
+      community.general.timezone:
+        name: "{{ workstation_timezone }}"
+      when: workstation_manage_timezone | bool
+
+    - name: Enable time synchronization on Debian-family systems
+      ansible.builtin.service:
+        name: chrony
+        enabled: true
+        state: started
+      when:
+        - workstation_manage_time_sync | bool
+        - ansible_os_family == "Debian"
+
+    - name: Enable time synchronization on RedHat-family systems
+      ansible.builtin.service:
+        name: chronyd
+        enabled: true
+        state: started
+      when:
+        - workstation_manage_time_sync | bool
+        - ansible_os_family == "RedHat"
+
+    - name: Configure a concise managed-host message of the day
+      ansible.builtin.copy:
+        dest: /etc/motd
+        content: |
+          Managed workstation. Changes are provisioned with Ansible.
+        owner: root
+        group: root
+        mode: "0644"
+      when: workstation_configure_motd | bool

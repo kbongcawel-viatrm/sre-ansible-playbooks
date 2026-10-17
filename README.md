@@ -31,6 +31,7 @@ intentionally selected inventory:
 
 ```sh
 ansible-playbook --syntax-check playbooks/workstation/linux-pre-setup.yml
+ansible-playbook --syntax-check playbooks/workstation/fedora-common-user-security-workstation.yml
 ansible-playbook -i inventory/example/hosts.yml \
   playbooks/workstation/linux-pre-setup.yml --limit workstation \
   --check --diff
@@ -44,6 +45,10 @@ untracked inventory. Do not commit secrets or production host details.
 
 See [docs/adding-playbooks.md](docs/adding-playbooks.md) for the structure,
 conventions, validation steps, and review checklist for new playbooks.
+
+The Fedora CUSP playbook vendors the generated Ansible remediation from SCAP
+Security Guide 0.1.82. It requires `fedora_cusp_apply_remediation=true` before
+applying changes. Review and test it on a disposable Fedora workstation first.
 
 ## Safety
 

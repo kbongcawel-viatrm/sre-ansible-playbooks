@@ -49,3 +49,39 @@ run `ansible-lint` as well.
 - Are potentially disruptive changes opt-in and documented?
 - Are secrets and real infrastructure details excluded?
 - Have syntax validation and an appropriate test run succeeded?
+
+## Fedora CUSP playbook
+
+`playbooks/workstation/fedora-common-user-security-workstation.yml` vendors the
+generated SCAP Security Guide Ansible remediation for profile
+`xccdf_org.ssgproject.content_profile_cusp_fedora` (benchmark version 0.1.82,
+generated 2026-09-02). It contains approximately 1,659 upstream task entries.
+This is a broad security baseline, not a small workstation bootstrap. The
+upstream generator notes that it attempts to fix every selected rule and does
+not first evaluate compliance. Inspect the changes and test on a non-operational
+Fedora system before deploying.
+
+The play targets only the `workstation` inventory group and has an explicit
+opt-in guard. Preview the selected changes with:
+
+```sh
+ansible-playbook -i /path/to/fedora-inventory.yml \
+  playbooks/workstation/fedora-common-user-security-workstation.yml \
+  --limit workstation --check --diff \
+  -e fedora_cusp_apply_remediation=true
+```
+
+The command above is a preview only; after reviewing the changes, apply with:
+
+```sh
+ansible-playbook -i /path/to/fedora-inventory.yml \
+  playbooks/workstation/fedora-common-user-security-workstation.yml \
+  --limit workstation -e fedora_cusp_apply_remediation=true
+```
+
+The profile ID is `xccdf_org.ssgproject.content_profile_cusp_fedora`. The
+referenced 2023 guide documents SCAP Security Guide 0.1.68 and Fedora 36–40;
+this vendored file is generated from SCAP Security Guide 0.1.82. Check
+compatibility with the target Fedora release, review its changes, and test
+before rollout. The upstream guide warns to test its settings in a
+non-operational environment first.
